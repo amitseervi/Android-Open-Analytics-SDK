@@ -1,22 +1,23 @@
 package com.rignis.analyticssdk
 
-import kotlin.properties.Delegates
+import android.content.Context
+import com.rignis.analyticssdk.client.RignisAnalyticsClientImpl
 
-class RignisAnalytics : Analytics {
+object RignisAnalytics : Analytics {
+    @Volatile
+    private var rignisAnalyticsClientImpl: RignisAnalyticsClientImpl? = null
+
+    @Synchronized
+    internal fun init(context: Context) {
+        if (rignisAnalyticsClientImpl != null) {
+            return
+        }
+        rignisAnalyticsClientImpl = RignisAnalyticsClientImpl.buildFrom(context)
+    }
     override fun sendEvent(
         event: String,
         params: Map<String, String>,
     ) {
-
-    }
-
-    companion object {
-        private var instance: RignisAnalytics by Delegates.notNull<RignisAnalytics>()
-
-        fun getInstance(): Analytics = instance
-
-        internal fun setInstance(instance: RignisAnalytics) {
-            this.instance = instance
-        }
+        rignisAnalyticsClientImpl?.sendEvent(event, params)
     }
 }

@@ -5,8 +5,8 @@ import androidx.startup.Initializer
 
 class RignisAnalyticsInitializer : Initializer<Analytics> {
     override fun create(context: Context): Analytics {
-        RignisAnalytics.setInstance(RignisAnalytics())
-        return RignisAnalytics.getInstance()
+        RignisAnalytics.init(context)
+        return RignisAnalytics
     }
 
     override fun dependencies(): MutableList<Class<out Initializer<*>>> {

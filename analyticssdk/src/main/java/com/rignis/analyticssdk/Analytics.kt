@@ -7,6 +7,6 @@ interface Analytics {
     )
 
     companion object {
-        fun getInstance(): Analytics = RignisAnalytics.getInstance()
+        fun getInstance(): Analytics = RignisAnalytics
     }
 }
