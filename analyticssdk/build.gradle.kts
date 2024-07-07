@@ -70,4 +70,7 @@ dependencies {
     implementation(libs.androidx.startup.runtime)
 
     implementation(libs.timber)
+
+    implementation(libs.androidx.work.runtime.ktx)
+    testImplementation(libs.androidx.work.testing)
 }
