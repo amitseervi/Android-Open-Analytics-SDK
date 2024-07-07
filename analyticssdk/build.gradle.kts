@@ -65,4 +65,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.retrofit)
+
+    implementation(libs.androidx.startup.runtime)
+
+    implementation(libs.timber)
 }

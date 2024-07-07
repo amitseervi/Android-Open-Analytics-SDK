@@ -7,6 +7,7 @@ class RignisAnalytics : Analytics {
         event: String,
         params: Map<String, String>,
     ) {
+
     }
 
     companion object {
