@@ -13,7 +13,9 @@ import com.rignis.analyticssdk.network.SyncRequestPayloadDto
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import timber.log.Timber
 
+private const val LOG_TAG = "Syncer"
 class Syncer(
     private val dbAdapter: DbAdapter,
     private val apiService: ApiService,
@@ -43,10 +45,12 @@ class Syncer(
 
     fun syncDbEvents(): Boolean {
         if (!shouldSyncEventsImmediately()) {
+            Timber.tag(LOG_TAG).i("Sync db event should not sync immediately")
             return false
         }
         mLastSyncTriggerTimeStamp = System.currentTimeMillis()
         mCallInProgress = true
+        sync()
         return true
     }
 
@@ -76,6 +80,7 @@ class Syncer(
     }
 
     private fun onRequestFailed(batch: RequestBatch) {
+        Timber.tag(LOG_TAG).i("Sync db failed")
         dbAdapter.handleBatchRequestFail(batch)
         mCallInProgress = false
         mLastSyncFailed = true
@@ -83,7 +88,8 @@ class Syncer(
     }
 
     private fun onRequestSuccess(batch: RequestBatch) {
-        dbAdapter.handleBatchRequestFail(batch)
+        Timber.tag(LOG_TAG).i("Sync db success")
+        dbAdapter.handleBatchRequestSuccess(batch)
         mCallInProgress = false
         mLastSyncFailed = false
         mLastSyncFailTimeStamp = 0L

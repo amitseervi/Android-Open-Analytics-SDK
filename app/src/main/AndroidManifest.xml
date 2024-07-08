@@ -12,20 +12,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AnalyticsSdk"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
         <meta-data
-            android:name="com.rignis.analyticssdk.config.batchsize"
-            android:value="10" />
-
-        <meta-data
-            android:name="com.rignis.analyticssdk.config.clientid"
+            android:name="com.rignis.analyticssdk.clientid"
             android:value="d625a8ed-d251-4c5f-bde0-4dd657a4f885" />
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.AnalyticsSdk">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -40,7 +36,7 @@
             android:exported="false"
             tools:node="merge">
             <meta-data
-                android:name="com.rignis."
+                android:name="com.rignis.demo.AnalyticsSDKInitializer"
                 android:value="androidx.startup" />
         </provider>
     </application>

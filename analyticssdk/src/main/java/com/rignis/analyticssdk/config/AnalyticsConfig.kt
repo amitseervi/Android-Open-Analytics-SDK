@@ -1,6 +1,8 @@
 package com.rignis.analyticssdk.config
 
 class AnalyticsConfig {
+    var clientId: String = ""
+        private set
     var baseUrl: String = DefaultConfig.SYNC_REQUEST_BASE_URL
     var syncRequestDebounceTime: Long = DefaultConfig.SYNC_REQUEST_DEBOUNCE_TIME
     var syncRequestTimeOut: Long= DefaultConfig.SYNC_REQUEST_TIME_OUT
@@ -12,6 +14,6 @@ class AnalyticsConfig {
     var optOutAnalytics:Boolean = DefaultConfig.OPT_OUT_ANALYTICS
 
     fun setFrom(metaDataReader: MetaDataReader) {
-
+        clientId = metaDataReader.getClientId().orEmpty()
     }
 }

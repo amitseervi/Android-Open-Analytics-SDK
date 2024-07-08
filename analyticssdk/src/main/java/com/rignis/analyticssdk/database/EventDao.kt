@@ -29,10 +29,10 @@ abstract class EventDao {
     abstract fun updateEventOnRequestFail(status: SyncStatus, requestTime: Long)
 
     @Transaction
-    fun readBatchAndUpdate(limit: Int, timeStamp: Long): List<EventEntity> {
+    open fun readBatchAndUpdate(limit: Int, timeStamp: Long): List<EventEntity> {
         val result = readBatch(limit)
         updateEventForSyncRequest(
-            result.map { it.eventId },
+            result.mapNotNull { it.eventId },
             SyncStatus.IN_PROGRESS,
             timeStamp
         )

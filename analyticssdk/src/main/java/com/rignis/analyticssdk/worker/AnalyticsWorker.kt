@@ -5,7 +5,9 @@ import android.os.Looper
 import android.os.Message
 import com.rignis.analyticssdk.config.AnalyticsConfig
 import com.rignis.analyticssdk.database.DbAdapter
+import timber.log.Timber
 
+private const val LOG_TAG = "AnalyticsWorker"
 class AnalyticsWorker(
     private val config: AnalyticsConfig,
     private val syncer: Syncer,
@@ -20,6 +22,7 @@ class AnalyticsWorker(
 
     init {
         val handlerThread = HandlerThread("Analytics-Worker", HandlerThread.MIN_PRIORITY)
+        handlerThread.start()
         analyticsHandler = AnalyticsMessageHandler(handlerThread.looper)
     }
 
@@ -35,10 +38,11 @@ class AnalyticsWorker(
     }
 
     private inner class AnalyticsMessageHandler(looper: Looper) : android.os.Handler(looper) {
-        
+
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 EVENT_SUBMIT -> {
+                    Timber.tag(LOG_TAG).i("Event submit")
                     (msg.obj as? EventMessage)?.let {
                         dbAdapter.addEvent(it.name, it.params)
                     }
@@ -54,6 +58,7 @@ class AnalyticsWorker(
                 }
 
                 EVENT_CLEANUP_EVENTS -> {
+                    Timber.tag(LOG_TAG).i("Sync events with server")
                     syncer.syncDbEvents()
                 }
 

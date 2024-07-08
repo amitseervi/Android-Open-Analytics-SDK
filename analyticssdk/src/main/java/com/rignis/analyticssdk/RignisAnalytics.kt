@@ -12,6 +12,7 @@ import com.rignis.analyticssdk.worker.AnalyticsWorker
 import com.rignis.analyticssdk.worker.Syncer
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.time.Duration
 
 object RignisAnalytics {
@@ -52,17 +53,21 @@ object RignisAnalytics {
     }
 
     fun initialize(context: Context) {
+        config.setFrom(MetaDataReader(context))
         assert(config.baseUrl.isNotEmpty()) {
             "Base Url can not be empty"
         }
-        config.setFrom(MetaDataReader(context))
+        assert(config.clientId.isNotEmpty()) {
+            "Client id should be provided in meta data of application"
+        }
         networkConnectivityObserver.subscribe(context)
         db = Room.databaseBuilder(context, RignisEventDB::class.java, "rignis_event_db").build()
         val retrofit = Retrofit.Builder().baseUrl(config.baseUrl).client(
             OkHttpClient.Builder()
                 .callTimeout(Duration.ofMillis(config.syncRequestTimeOut))
                 .build()
-        ).build()
+        ).addConverterFactory(GsonConverterFactory.create())
+            .build()
         apiService = retrofit.create(ApiService::class.java)
         dbAdapter = DbAdapter(db.eventDao(), config)
         syncer = Syncer(dbAdapter, apiService, config)
@@ -86,5 +91,6 @@ object RignisAnalytics {
         if (config.optOutAnalytics) {
             return
         }
+        analyticsWorker.sendEvent(name, params)
     }
 }
