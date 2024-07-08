@@ -2,13 +2,20 @@ package com.rignis.analyticssdk
 
 import android.content.Context
 import androidx.room.Room
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.rignis.analyticssdk.config.AnalyticsConfig
 import com.rignis.analyticssdk.config.MetaDataReader
 import com.rignis.analyticssdk.database.DbAdapter
 import com.rignis.analyticssdk.database.RignisEventDB
 import com.rignis.analyticssdk.network.ApiService
+import com.rignis.analyticssdk.network.HeaderInterceptor
 import com.rignis.analyticssdk.network.NetworkConnectivityObserver
 import com.rignis.analyticssdk.worker.AnalyticsWorker
+import com.rignis.analyticssdk.worker.DailySyncWorker
 import com.rignis.analyticssdk.worker.Syncer
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -65,6 +72,7 @@ object RignisAnalytics {
         val retrofit = Retrofit.Builder().baseUrl(config.baseUrl).client(
             OkHttpClient.Builder()
                 .callTimeout(Duration.ofMillis(config.syncRequestTimeOut))
+                .addInterceptor(HeaderInterceptor(config))
                 .build()
         ).addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -73,6 +81,29 @@ object RignisAnalytics {
         syncer = Syncer(dbAdapter, apiService, config)
         analyticsWorker = restartAnalyticsWorker(config, syncer, dbAdapter)
         analyticsWorker.cleanup()
+        enqueBackgroundWorker(context, config)
+    }
+
+    private fun enqueBackgroundWorker(context: Context, config: AnalyticsConfig) {
+        val workManager = WorkManager.getInstance(context)
+        if (!config.backgroundSyncEnabled) {
+            workManager.cancelUniqueWork("rignis-data-sync")
+            return
+        }
+        val periodicWorkRequest = PeriodicWorkRequestBuilder<DailySyncWorker>(
+            Duration.ofHours(config.backgroundSyncIntervalInHour.toLong())
+        ).setConstraints(
+            Constraints.Builder()
+                .setRequiresDeviceIdle(true)
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresBatteryNotLow(true)
+                .build()
+        ).build()
+        workManager.enqueueUniquePeriodicWork(
+            "rignis-data-sync",
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicWorkRequest
+        )
     }
 
     private fun restartAnalyticsWorker(
