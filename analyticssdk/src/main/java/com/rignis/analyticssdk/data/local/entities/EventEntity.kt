@@ -12,6 +12,8 @@ data class EventEntity(
     val eventParams: Map<String, String>,
     @ColumnInfo("client_time_stamp")
     val clientTimeStamp: Long,
+    @ColumnInfo("sync_status")
+    val status: SyncStatus,
     @PrimaryKey(autoGenerate = true)
-    val index: Int? = null,
+    val eventId: Int? = null,
 )

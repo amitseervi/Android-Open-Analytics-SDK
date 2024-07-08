@@ -3,7 +3,6 @@ package com.rignis.analyticssdk
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.room.Room
-import com.rignis.analyticssdk.client.RignisAnalyticsClientImpl
 import com.rignis.analyticssdk.config.AnalyticsConfig
 import com.rignis.analyticssdk.config.DefaultConfig
 import com.rignis.analyticssdk.data.local.RignisDb
@@ -20,9 +19,6 @@ object RignisAnalytics : Analytics {
     private const val CONFIG_ARG_CLIENT_ID = "com.rignis.analyticssdk.config.clientid"
     private const val CONFIG_ARG_BATCH_SIZE = "com.rignis.analyticssdk.config.batchsize"
 
-    @Volatile
-    private var rignisAnalyticsClientImpl: RignisAnalyticsClientImpl? = null
-
     internal lateinit var db: RignisDb
         private set
     internal lateinit var config: AnalyticsConfig
@@ -32,11 +28,7 @@ object RignisAnalytics : Analytics {
     internal val networkConnectivitySubscriber: NetworkConnectivitySubscriber =
         NetworkConnectivitySubscriber()
 
-    @Synchronized
     internal fun init(context: Context) {
-        if (rignisAnalyticsClientImpl != null) {
-            return
-        }
         val applicationInfo = context.packageManager.getApplicationInfo(
             context.packageName,
             PackageManager.GET_META_DATA
@@ -56,12 +48,10 @@ object RignisAnalytics : Analytics {
             flushFallbackInterval = DefaultConfig.flushFallbackInterval
         )
         db = Room.databaseBuilder(context, RignisDb::class.java, "rignis").build()
-        rignisAnalyticsClientImpl = RignisAnalyticsClientImpl(config, db)
         networkConnectivitySubscriber.subscribe(context)
         _service = service()
         worker = AnalyticsWorker(db.eventDao(), config, _service, networkConnectivitySubscriber)
         worker.cleanupEvents()
-        worker.flushEvents() // send clean up and flush events on application start
     }
 
     internal fun service(): AnalyticsApiService {
@@ -95,6 +85,6 @@ object RignisAnalytics : Analytics {
         event: String,
         params: Map<String, String>,
     ) {
-        rignisAnalyticsClientImpl?.sendEvent(event, params)
+        worker.sendEvent(event, params)
     }
 }

@@ -7,6 +7,7 @@ import android.os.Message
 import com.rignis.analyticssdk.config.AnalyticsConfig
 import com.rignis.analyticssdk.data.local.dao.EventDao
 import com.rignis.analyticssdk.data.local.entities.EventEntity
+import com.rignis.analyticssdk.data.local.entities.SyncStatus
 import com.rignis.analyticssdk.data.remote.dto.SyncRequestDto
 import com.rignis.analyticssdk.data.remote.dto.SyncRequestPayloadDto
 import com.rignis.analyticssdk.data.remote.service.AnalyticsApiService
@@ -51,6 +52,8 @@ internal class AnalyticsWorker(
         private const val FLUSH_EVENTS = 1
         private const val ENQUEUE_EVENTS = 2
         private const val CLEANUP_EVENTS = 3
+        private const val FLUSH_EVENT_SUCCESS = 4
+        private const val FLUSH_EVENT_FAILED = 5
     }
 
 
@@ -70,18 +73,20 @@ internal class AnalyticsWorker(
             super.handleMessage(msg)
             when (msg.what) {
                 ENQUEUE_EVENTS -> {
+                    println("message : EVENT")
                     val eventMessage = msg.obj as EventMessage
                     dao.insertEvent(
                         EventEntity(
                             eventMessage.name,
                             eventMessage.params,
-                            System.currentTimeMillis()
+                            System.currentTimeMillis(),
+                            SyncStatus.SYNC_PENDING
                         )
                     )
                     val totalEvents = dao.countTotalEvents()
                     if (totalEvents >= config.batchSize) {
                         val flushMessage = obtainMessage(FLUSH_EVENTS)
-                        sendMessageAtFrontOfQueue(flushMessage)
+                        sendMessage(flushMessage)
                     } else if (totalEvents > 0 && !hasMessages(FLUSH_EVENTS)) {
                         val autoFlushMessage = obtainMessage(FLUSH_EVENTS)
                         sendMessageDelayed(autoFlushMessage, config.flushInterval)
@@ -89,41 +94,82 @@ internal class AnalyticsWorker(
                 }
 
                 FLUSH_EVENTS -> {
-                    val eventBatch = dao.readBatch(config.batchSize)
+                    println("message : FLUSH")
+                    if (flushInProgress) {
+                        return
+                    }
+                    val eventBatch = dao.readBatch(SyncStatus.SYNC_PENDING)
                     if (eventBatch.isNotEmpty()) {
                         if (networkConnectivitySubscriber.isNetworkAvailable() && !flushInProgress) {
                             flushInProgress = true
-                            val response =
+                            dao.setSyncStatus(
+                                eventBatch.mapNotNull { it.eventId },
+                                SyncStatus.SYNC_IN_PROGRESS
+                            )
+                            val call =
                                 service.postEvent(SyncRequestPayloadDto(eventBatch.map { it.toDto() }))
-                            response.enqueue(object : retrofit2.Callback<Response<String>> {
+                            call.enqueue(object : retrofit2.Callback<Response<String>> {
                                 override fun onResponse(
                                     p0: Call<Response<String>>,
                                     p1: Response<Response<String>>
                                 ) {
-                                    dao.deleteEventBeforeId(eventBatch.last().index ?: 0)
-                                    flushRetry = 0
+                                    mHandler.sendMessageAtFrontOfQueue(
+                                        obtainMessage(
+                                            FLUSH_EVENT_SUCCESS
+                                        )
+                                    )
                                 }
 
                                 override fun onFailure(p0: Call<Response<String>>, p1: Throwable) {
-                                    flushRetry++
-                                    if (flushRetry <= 3) {
-                                        var flushRetryFallbackDelay = config.flushFallbackInterval
-                                        repeat(flushRetry) {
-                                            flushRetryFallbackDelay += flushRetryFallbackDelay
-                                        }
-                                        flushRetryFallbackDelay =
-                                            min(flushRetryFallbackDelay, 10 * 60 * 1000L)
-                                        val flushMessage = obtainMessage(FLUSH_EVENTS)
-                                        sendMessageDelayed(flushMessage, flushRetryFallbackDelay)
-                                    }
+                                    mHandler.sendMessageAtFrontOfQueue(
+                                        obtainMessage(
+                                            FLUSH_EVENT_FAILED
+                                        )
+                                    )
                                 }
                             })
                         }
                     }
                 }
 
+                FLUSH_EVENT_SUCCESS -> {
+                    println("message : FLUSH SUCCESS")
+                    dao.deleteEventsWithStatus(SyncStatus.SYNC_IN_PROGRESS)
+                    flushInProgress = false
+                    flushRetry = 0
+                    val totalEvents = dao.countTotalEvents()
+                    if (totalEvents > config.batchSize) {
+                        val flushMessage = obtainMessage(FLUSH_EVENTS)
+                        sendMessage(flushMessage)
+                    }
+                }
+
+                FLUSH_EVENT_FAILED -> {
+                    println("message : FLUSH FAILED")
+                    removeMessages(FLUSH_EVENTS)
+                    dao.changeSyncStatus(SyncStatus.SYNC_IN_PROGRESS, SyncStatus.SYNC_PENDING)
+                    if (flushRetry < 3) {
+                        var flushRetryFallbackDelay = config.flushFallbackInterval
+                        repeat(flushRetry + 1) {
+                            flushRetryFallbackDelay += flushRetryFallbackDelay
+                        }
+                        flushRetryFallbackDelay =
+                            min(flushRetryFallbackDelay, 10 * 60 * 1000L)
+                        val flushMessage = obtainMessage(FLUSH_EVENTS)
+                        sendMessageDelayed(flushMessage, flushRetryFallbackDelay)
+                        flushRetry++
+                    } else {
+                        val flushMessage = obtainMessage(FLUSH_EVENTS)
+                        sendMessageDelayed(flushMessage, 10 * 60 * 1000L)
+                    }
+                    flushInProgress = false
+                }
+
                 CLEANUP_EVENTS -> {
+                    println("message : CLEAN QUEUE")
                     dao.deleteEventsBefore(System.currentTimeMillis() - config.eventDataTTL)
+                    val flushMessage = obtainMessage(FLUSH_EVENTS)
+                    sendMessage(flushMessage)
                 }
 
                 else -> {
