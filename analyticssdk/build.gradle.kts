@@ -73,4 +73,9 @@ dependencies {
 
     implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.androidx.work.testing)
+
+    implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.okhttp.converter.gson)
+
+
 }

@@ -8,11 +8,17 @@ import com.rignis.analyticssdk.data.local.entities.EventEntity
 @Dao
 abstract class EventDao {
     @Insert
-    abstract suspend fun insertEvent(vararg events: EventEntity)
+    abstract fun insertEvent(vararg events: EventEntity)
 
-    @Query("SELECT * FROM rignis_events WHERE sync_status=\"SYNC_PENDING\" ORDER BY `index` LIMIT :batchSize")
-    abstract suspend fun readBatch(batchSize: Int): List<EventEntity>
+    @Query("SELECT * FROM rignis_events ORDER BY `index` LIMIT :batchSize")
+    abstract fun readBatch(batchSize: Int): List<EventEntity>
 
-    @Query("SELECT EXISTS(SELECT * FROM RIGNIS_EVENTS where sync_status=\"SYNC_PENDING\" LIMIT 1)")
-    abstract suspend fun hasPendingEvents(): Boolean
+    @Query("SELECT COUNT(*) FROM rignis_events WHERE 1")
+    abstract fun countTotalEvents(): Int
+
+    @Query("DELETE FROM rignis_events WHERE client_time_stamp<:timeStamp")
+    abstract fun deleteEventsBefore(timeStamp: Long)
+
+    @Query("DELETE FROM rignis_events WHERE `index`<=:index")
+    abstract fun deleteEventBeforeId(index: Int)
 }

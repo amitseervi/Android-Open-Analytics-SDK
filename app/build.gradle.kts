@@ -94,5 +94,8 @@ dependencies {
 
     implementation(libs.timber)
 
+    implementation(libs.androidx.work.runtime.ktx)
+    testImplementation(libs.androidx.work.testing)
+
     implementation(project(":analyticssdk"))
 }

@@ -22,7 +22,6 @@ internal class RignisAnalyticsClientImpl(
                 EventEntity(
                     eventName = event,
                     eventParams = params,
-                    syncStatus = SyncStatus.SYNC_PENDING,
                     clientTimeStamp = System.currentTimeMillis()
                 )
             )
