@@ -25,7 +25,12 @@ class Syncer(
     private var mLastSyncFailed: Boolean = false
     private var mLastSyncFailTimeStamp: Long = 0L
     private var mLastSyncTriggerTimeStamp: Long = 0L
+    private val callbacks: MutableSet<OnRequestCompleteCallback> = mutableSetOf()
 
+    @Synchronized
+    fun addCallback(callback: OnRequestCompleteCallback) {
+        callbacks.add(callback)
+    }
 
     fun shouldSyncEventsImmediately(): Boolean {
         if (mCallInProgress) {
@@ -56,6 +61,7 @@ class Syncer(
 
     private fun sync() {
         val looper = Looper.myLooper() ?: return
+        dbAdapter.resetFailedRequest()
         val batch = dbAdapter.readFirstNEvents(config.maxSyncRequestEventListSize)
         val call = apiService.postEvent(SyncRequestPayloadDto(batch.events.map {
             it.toSyncRequestPayload()
@@ -85,6 +91,7 @@ class Syncer(
         mCallInProgress = false
         mLastSyncFailed = true
         mLastSyncFailTimeStamp = System.currentTimeMillis()
+        notifyFail()
     }
 
     private fun onRequestSuccess(batch: RequestBatch) {
@@ -93,8 +100,28 @@ class Syncer(
         mCallInProgress = false
         mLastSyncFailed = false
         mLastSyncFailTimeStamp = 0L
+        notifySuccess()
     }
 
+    @Synchronized
+    private fun notifySuccess() {
+        callbacks.forEach {
+            it.onSuccess()
+        }
+    }
+
+    @Synchronized
+    private fun notifyFail() {
+        callbacks.forEach {
+            it.onFail()
+        }
+    }
+
+
+    interface OnRequestCompleteCallback {
+        fun onSuccess()
+        fun onFail()
+    }
 }
 
 private fun EventEntity.toSyncRequestPayload(): EventDto {

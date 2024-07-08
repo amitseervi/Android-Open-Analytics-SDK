@@ -12,10 +12,11 @@ class AnalyticsWorker(
     private val config: AnalyticsConfig,
     private val syncer: Syncer,
     private val dbAdapter: DbAdapter,
-) {
+) : Syncer.OnRequestCompleteCallback {
     companion object {
         private const val EVENT_CLEANUP_EVENTS: Int = 1
         private const val EVENT_SUBMIT: Int = 2
+        private const val CHECK_FOR_MORE_SYNC = 3
     }
 
     private val analyticsHandler: AnalyticsMessageHandler
@@ -24,6 +25,7 @@ class AnalyticsWorker(
         val handlerThread = HandlerThread("Analytics-Worker", HandlerThread.MIN_PRIORITY)
         handlerThread.start()
         analyticsHandler = AnalyticsMessageHandler(handlerThread.looper)
+        syncer.addCallback(this)
     }
 
 
@@ -62,6 +64,13 @@ class AnalyticsWorker(
                     syncer.syncDbEvents()
                 }
 
+                CHECK_FOR_MORE_SYNC -> {
+                    val dbSize = dbAdapter.getTotalEventCount()
+                    if (dbSize > config.foregroundSyncBatchSize && syncer.shouldSyncEventsImmediately()) {
+                        sendMessage(obtainMessage(EVENT_CLEANUP_EVENTS))
+                    }
+                }
+
                 else -> {
 
                 }
@@ -70,4 +79,13 @@ class AnalyticsWorker(
     }
 
     data class EventMessage(val name: String, val params: Map<String, String>)
+
+    override fun onSuccess() {
+        // On Syncer request success
+        analyticsHandler.sendMessage(analyticsHandler.obtainMessage(CHECK_FOR_MORE_SYNC))
+    }
+
+    override fun onFail() {
+        // On Syncer request success
+    }
 }
