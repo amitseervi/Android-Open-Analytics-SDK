@@ -1,52 +1,17 @@
 package com.rignis.analyticssdk.config
 
-internal class AnalyticsConfig(
-    val clientId: String,
-    batchSize: Int,
-    val baseUrl: String,
-    eventDataTTL: Long,
-    flushInterval: Long,
-    flushFallbackInterval: Long,
-    val debug: Boolean = false,
-    maxPostBoxyEventListSize: Int
-) {
-    private var _batchSize: Int = batchSize
-    val batchSize: Int
-        get() = _batchSize
+class AnalyticsConfig {
+    var baseUrl: String = DefaultConfig.SYNC_REQUEST_BASE_URL
+    var syncRequestDebounceTime: Long = DefaultConfig.SYNC_REQUEST_DEBOUNCE_TIME
+    var syncRequestTimeOut: Long= DefaultConfig.SYNC_REQUEST_TIME_OUT
+    var backgroundSyncEnabled: Boolean = DefaultConfig.BACKGROUND_SYNC_ENABLED
+    var foregroundSyncInterval: Long = DefaultConfig.FOREGROUND_SYNC_INTERVAL
+    var foregroundSyncBatchSize: Int = DefaultConfig.FOREGROUND_SYNC_BATCH_SIZE
+    var backgroundSyncIntervalInHour: Int = DefaultConfig.BACKGROUND_SYNC_INTERVAL_IN_HOUR
+    var maxSyncRequestEventListSize:Int = DefaultConfig.MAX_SYNC_REQ_EVENT_LIST_SIZE
+    var optOutAnalytics:Boolean = DefaultConfig.OPT_OUT_ANALYTICS
 
-    private var _maxPostBoxyEventListSize: Int = maxPostBoxyEventListSize
-    val maxPostBoxyEventListSize: Int
-        get() = _maxPostBoxyEventListSize
+    fun setFrom(metaDataReader: MetaDataReader) {
 
-    private var _eventDataTTL: Long = eventDataTTL
-    val eventDataTTL: Long
-        get() = _eventDataTTL
-
-    private var _flushInterval: Long = flushInterval
-    val flushInterval: Long
-        get() = _flushInterval
-
-    private var _flushFallbackInterval: Long = flushFallbackInterval
-    val flushFallbackInterval: Long
-        get() = _flushFallbackInterval
-
-    fun setBatchSize(batchSize: Int) {
-        _batchSize = batchSize
-    }
-
-    fun setMaxPostBoxyEventListSize(maxPostBoxyEventListSize: Int) {
-        _maxPostBoxyEventListSize = maxPostBoxyEventListSize
-    }
-
-    fun setEventDataTTL(eventDataTTL: Int) {
-        _batchSize = batchSize
-    }
-
-    fun setFlushInterval(flushInterval: Long) {
-        _flushInterval = flushInterval
-    }
-
-    fun setFlushFallbackInterval(flushFallbackInterval: Long) {
-        _flushFallbackInterval = flushFallbackInterval
     }
 }

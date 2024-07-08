@@ -22,11 +22,11 @@ plugins {
 }
 
 android {
-    namespace = "com.rignis.analyticssdk"
+    namespace = "com.rignis.demo"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.rignis.analyticssdk"
+        applicationId = "com.rignis.demo"
         minSdk = 28
         targetSdk = 34
         versionCode = 1
