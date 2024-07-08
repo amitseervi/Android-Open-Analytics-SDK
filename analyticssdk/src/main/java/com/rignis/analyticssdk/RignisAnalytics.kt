@@ -38,15 +38,15 @@ object RignisAnalytics : Analytics {
         if (clientId.isNullOrEmpty()) {
             error("Client id not specified. Add meta data argument in manifest for $CONFIG_ARG_CLIENT_ID")
         }
-        val batchSize = metaDataBundle.getInt(CONFIG_ARG_BATCH_SIZE, DefaultConfig.batchSize)
+        val batchSize = metaDataBundle.getInt(CONFIG_ARG_BATCH_SIZE, DefaultConfig.BATCH_SIZE)
         config = AnalyticsConfig(
             clientId = clientId,
             batchSize = batchSize,
-            baseUrl = DefaultConfig.baseUrl,
-            eventDataTTL = DefaultConfig.eventDataTTL,
-            flushInterval = DefaultConfig.flushInterval,
-            flushFallbackInterval = DefaultConfig.flushFallbackInterval,
-            maxPostBoxyEventListSize = DefaultConfig.maxPostBoxyEventListSize
+            baseUrl = DefaultConfig.BASE_URL,
+            eventDataTTL = DefaultConfig.EVENT_DATA_TTL,
+            flushInterval = DefaultConfig.FLUSH_INTERVAL,
+            flushFallbackInterval = DefaultConfig.FLUSH_FALLBACK_INTERVAL,
+            maxPostBoxyEventListSize = DefaultConfig.MAX_POST_PAYLOAD_LIST_SIZE
         )
         db = Room.databaseBuilder(context, RignisDb::class.java, "rignis").build()
         networkConnectivitySubscriber.subscribe(context)

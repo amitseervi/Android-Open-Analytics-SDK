@@ -29,4 +29,24 @@ internal class AnalyticsConfig(
     private var _flushFallbackInterval: Long = flushFallbackInterval
     val flushFallbackInterval: Long
         get() = _flushFallbackInterval
+
+    fun setBatchSize(batchSize: Int) {
+        _batchSize = batchSize
+    }
+
+    fun setMaxPostBoxyEventListSize(maxPostBoxyEventListSize: Int) {
+        _maxPostBoxyEventListSize = maxPostBoxyEventListSize
+    }
+
+    fun setEventDataTTL(eventDataTTL: Int) {
+        _batchSize = batchSize
+    }
+
+    fun setFlushInterval(flushInterval: Long) {
+        _flushInterval = flushInterval
+    }
+
+    fun setFlushFallbackInterval(flushFallbackInterval: Long) {
+        _flushFallbackInterval = flushFallbackInterval
+    }
 }
