@@ -45,7 +45,8 @@ object RignisAnalytics : Analytics {
             baseUrl = DefaultConfig.baseUrl,
             eventDataTTL = DefaultConfig.eventDataTTL,
             flushInterval = DefaultConfig.flushInterval,
-            flushFallbackInterval = DefaultConfig.flushFallbackInterval
+            flushFallbackInterval = DefaultConfig.flushFallbackInterval,
+            maxPostBoxyEventListSize = DefaultConfig.maxPostBoxyEventListSize
         )
         db = Room.databaseBuilder(context, RignisDb::class.java, "rignis").build()
         networkConnectivitySubscriber.subscribe(context)

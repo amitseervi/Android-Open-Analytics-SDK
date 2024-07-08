@@ -11,8 +11,8 @@ abstract class EventDao {
     @Insert
     abstract fun insertEvent(vararg events: EventEntity)
 
-    @Query("SELECT * FROM rignis_events WHERE sync_status=:syncStatus ORDER BY `client_time_stamp`")
-    abstract fun readBatch(syncStatus: SyncStatus): List<EventEntity>
+    @Query("SELECT * FROM rignis_events WHERE sync_status=:syncStatus ORDER BY `client_time_stamp` LIMIT :limit")
+    abstract fun readBatch(syncStatus: SyncStatus, limit: Int): List<EventEntity>
 
     @Query("SELECT COUNT(*) FROM rignis_events WHERE 1")
     abstract fun countTotalEvents(): Int

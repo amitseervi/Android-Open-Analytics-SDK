@@ -24,6 +24,8 @@ internal class AnalyticsWorker(
     private val networkConnectivitySubscriber: NetworkConnectivitySubscriber
 ) {
     private val mHandler: Handler
+    private var lastFlushFailTimeStamp: Long = 0L
+    private var lastFlushPushEventTimeStamp: Long = 0L
 
     init {
         val handlerThread =
@@ -73,7 +75,6 @@ internal class AnalyticsWorker(
             super.handleMessage(msg)
             when (msg.what) {
                 ENQUEUE_EVENTS -> {
-                    println("message : EVENT")
                     val eventMessage = msg.obj as EventMessage
                     dao.insertEvent(
                         EventEntity(
@@ -84,7 +85,8 @@ internal class AnalyticsWorker(
                         )
                     )
                     val totalEvents = dao.countTotalEvents()
-                    if (totalEvents >= config.batchSize) {
+                    if (totalEvents >= config.batchSize && System.currentTimeMillis() - lastFlushFailTimeStamp >= config.flushInterval && System.currentTimeMillis() - lastFlushPushEventTimeStamp > 2000) {
+                        lastFlushPushEventTimeStamp = System.currentTimeMillis()
                         val flushMessage = obtainMessage(FLUSH_EVENTS)
                         sendMessage(flushMessage)
                     } else if (totalEvents > 0 && !hasMessages(FLUSH_EVENTS)) {
@@ -94,11 +96,11 @@ internal class AnalyticsWorker(
                 }
 
                 FLUSH_EVENTS -> {
-                    println("message : FLUSH")
                     if (flushInProgress) {
                         return
                     }
-                    val eventBatch = dao.readBatch(SyncStatus.SYNC_PENDING)
+                    val eventBatch =
+                        dao.readBatch(SyncStatus.SYNC_PENDING, config.maxPostBoxyEventListSize)
                     if (eventBatch.isNotEmpty()) {
                         if (networkConnectivitySubscriber.isNetworkAvailable() && !flushInProgress) {
                             flushInProgress = true
@@ -133,7 +135,7 @@ internal class AnalyticsWorker(
                 }
 
                 FLUSH_EVENT_SUCCESS -> {
-                    println("message : FLUSH SUCCESS")
+                    lastFlushFailTimeStamp = 0
                     dao.deleteEventsWithStatus(SyncStatus.SYNC_IN_PROGRESS)
                     flushInProgress = false
                     flushRetry = 0
@@ -141,12 +143,15 @@ internal class AnalyticsWorker(
                     if (totalEvents > config.batchSize) {
                         val flushMessage = obtainMessage(FLUSH_EVENTS)
                         sendMessage(flushMessage)
+                    } else if (totalEvents > 0) {
+                        val flushMessage = obtainMessage(FLUSH_EVENTS)
+                        sendMessageDelayed(flushMessage, config.flushInterval)
                     }
                 }
 
                 FLUSH_EVENT_FAILED -> {
-                    println("message : FLUSH FAILED")
                     removeMessages(FLUSH_EVENTS)
+                    lastFlushFailTimeStamp = System.currentTimeMillis()
                     dao.changeSyncStatus(SyncStatus.SYNC_IN_PROGRESS, SyncStatus.SYNC_PENDING)
                     if (flushRetry < 3) {
                         var flushRetryFallbackDelay = config.flushFallbackInterval
@@ -166,7 +171,6 @@ internal class AnalyticsWorker(
                 }
 
                 CLEANUP_EVENTS -> {
-                    println("message : CLEAN QUEUE")
                     dao.deleteEventsBefore(System.currentTimeMillis() - config.eventDataTTL)
                     val flushMessage = obtainMessage(FLUSH_EVENTS)
                     sendMessage(flushMessage)
