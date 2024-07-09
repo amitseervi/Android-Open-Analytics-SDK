@@ -1,3 +1,3 @@
 package com.rignis.analyticssdk.error
 
-class ServerErrorException : Exception()
+internal class ServerErrorException : Exception()

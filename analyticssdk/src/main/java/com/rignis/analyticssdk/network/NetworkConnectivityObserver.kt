@@ -5,7 +5,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import androidx.core.content.ContextCompat
 
-class NetworkConnectivityObserver : ConnectivityManager.NetworkCallback() {
+internal class NetworkConnectivityObserver : ConnectivityManager.NetworkCallback() {
     private var mIsNetworkAvailable: Boolean = false
     private val subscriber: MutableSet<Callback> = mutableSetOf()
 

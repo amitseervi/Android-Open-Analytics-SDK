@@ -6,7 +6,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 
 @Dao
-abstract class EventDao {
+internal abstract class EventDao {
     @Insert
     abstract fun insertEvent(vararg events: EventEntity)
 

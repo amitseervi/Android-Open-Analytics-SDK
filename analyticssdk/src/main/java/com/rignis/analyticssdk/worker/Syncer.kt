@@ -19,7 +19,7 @@ import retrofit2.Response
 import timber.log.Timber
 
 private const val LOG_TAG = "Syncer"
-class Syncer(
+internal class Syncer(
     private val dbAdapter: DbAdapter,
     private val apiService: ApiService,
     private val config: AnalyticsConfig,

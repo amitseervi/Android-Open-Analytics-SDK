@@ -5,7 +5,7 @@ import com.rignis.analyticssdk.JsonProvider
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 
-class MapTypeConverter {
+internal class MapTypeConverter {
     @TypeConverter
     fun fromMapToString(value: Map<String, String>): String =
         JsonProvider.json.encodeToString(

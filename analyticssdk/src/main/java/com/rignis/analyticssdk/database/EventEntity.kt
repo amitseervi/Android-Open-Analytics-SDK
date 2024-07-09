@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "rignis_events")
-class EventEntity(
+internal class EventEntity(
     @ColumnInfo("event_name")
     val eventName: String,
     @ColumnInfo("event_params")

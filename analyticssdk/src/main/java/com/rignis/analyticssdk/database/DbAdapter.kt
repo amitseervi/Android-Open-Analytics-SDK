@@ -3,7 +3,7 @@ package com.rignis.analyticssdk.database
 import androidx.annotation.WorkerThread
 import com.rignis.analyticssdk.config.AnalyticsConfig
 
-class DbAdapter(private val dao: EventDao, private val config: AnalyticsConfig) {
+internal class DbAdapter(private val dao: EventDao, private val config: AnalyticsConfig) {
     @WorkerThread
     fun getTotalEventCount(): Int {
         return dao.countTotalEvents()

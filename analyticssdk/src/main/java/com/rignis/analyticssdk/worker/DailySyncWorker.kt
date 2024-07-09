@@ -6,7 +6,7 @@ import androidx.work.WorkerParameters
 import com.rignis.analyticssdk.RignisAnalytics
 import kotlin.coroutines.suspendCoroutine
 
-class DailySyncWorker(context: Context, parameters: WorkerParameters) :
+internal class DailySyncWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
         if (runAttemptCount > 3) {

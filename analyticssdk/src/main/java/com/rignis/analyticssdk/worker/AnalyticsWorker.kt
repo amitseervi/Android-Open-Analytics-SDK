@@ -13,7 +13,7 @@ import kotlin.math.roundToLong
 private const val ONE_MINUTE: Long = 60000
 private const val TEN_MINUTE: Long = 10 * ONE_MINUTE
 private const val LOG_TAG = "AnalyticsWorker"
-class AnalyticsWorker(
+internal class AnalyticsWorker(
     private val config: AnalyticsConfig,
     private val syncer: Syncer,
     private val dbAdapter: DbAdapter,

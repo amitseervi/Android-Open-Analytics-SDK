@@ -3,7 +3,7 @@ package com.rignis.analyticssdk.config
 import android.content.Context
 import android.content.pm.PackageManager
 
-class MetaDataReader(context: Context) {
+internal class MetaDataReader(context: Context) {
     private val applicationInfo = context.packageManager.getApplicationInfo(
         context.packageName,
         PackageManager.GET_META_DATA

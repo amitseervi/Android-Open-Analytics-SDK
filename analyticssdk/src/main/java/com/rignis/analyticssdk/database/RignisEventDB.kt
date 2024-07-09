@@ -10,6 +10,6 @@ import androidx.room.TypeConverters
         MapTypeConverter::class
     ]
 )
-abstract class RignisEventDB : RoomDatabase() {
+internal abstract class RignisEventDB : RoomDatabase() {
     abstract fun eventDao(): EventDao
 }

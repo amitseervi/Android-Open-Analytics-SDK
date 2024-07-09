@@ -1,10 +1,9 @@
 package com.rignis.analyticssdk.config
 
-class AnalyticsConfig {
+internal class AnalyticsConfig {
     var clientId: String = ""
         private set
     var baseUrl: String = DefaultConfig.SYNC_REQUEST_BASE_URL
-    var syncRequestDebounceTime: Long = DefaultConfig.SYNC_REQUEST_DEBOUNCE_TIME
     var syncRequestTimeOut: Long= DefaultConfig.SYNC_REQUEST_TIME_OUT
     var backgroundSyncEnabled: Boolean = DefaultConfig.BACKGROUND_SYNC_ENABLED
     var foregroundSyncInterval: Long = DefaultConfig.FOREGROUND_SYNC_INTERVAL

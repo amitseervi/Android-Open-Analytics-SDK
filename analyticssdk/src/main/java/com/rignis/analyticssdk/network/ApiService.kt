@@ -6,7 +6,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-interface ApiService {
+internal interface ApiService {
     @POST("/event")
     fun postEvent(@Body data: SyncRequestPayloadDto): Call<Response<JsonObject>>
 }
