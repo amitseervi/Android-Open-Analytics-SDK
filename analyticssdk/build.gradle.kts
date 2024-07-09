@@ -1,3 +1,5 @@
+import java.util.Properties
+
 /*
  * Copyright (c) [2024] Amitkumar Chaudhary
  *
@@ -31,9 +33,25 @@ android {
         consumerProguardFiles("consumer-rules.pro")
     }
 
+    val keystoreProperties = Properties()
+    keystoreProperties.load(File("keystore/keystore.properties").inputStream())
+
+    signingConfigs {
+        create("release") {
+            keyAlias =
+                keystoreProperties.getProperty("rignis-analytics-release-key-alias") as String
+            storeFile = File(project.rootProject.projectDir, "keystore/analytics-sdk-keystore.jks")
+            keyPassword =
+                keystoreProperties.getProperty("rignis-analytics-release-key-password") as String
+            storePassword =
+                keystoreProperties.getProperty("rignis-analytics-release-store-password") as String
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false // Disable minifying for sdk
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -86,8 +104,4 @@ dependencies {
     androidTestImplementation(libs.koin.test)
     androidTestImplementation(libs.koin.android.test)
     androidTestImplementation(libs.truth)
-
-
-
-
 }

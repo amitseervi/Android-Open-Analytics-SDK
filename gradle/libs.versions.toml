@@ -87,6 +87,7 @@ androidx-work-multiprocess = { module = "androidx.work:work-multiprocess", versi
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "workRuntimeKtx" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinAndroid" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroid" }
 koin-android-test = { module = "io.insert-koin:koin-android-test", version.ref = "koinAndroidTest" }
 koin-test = { module = "io.insert-koin:koin-test-junit4", version.ref = "koinAndroid" }

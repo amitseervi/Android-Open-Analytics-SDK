@@ -31,6 +31,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -78,6 +79,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(files("/Users/amit/MyProjects/android/AnalyticsSdk/analyticssdk/build/outputs/aar/analyticssdk-debug.aar"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -97,5 +99,5 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.androidx.work.testing)
 
-    implementation(project(":analyticssdk"))
+//    implementation(project(":analyticssdk"))
 }
