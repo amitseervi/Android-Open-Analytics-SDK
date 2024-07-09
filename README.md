@@ -11,14 +11,29 @@
 3. for generating release build or library provide property file and keystore file in keystore folder located in root directory and change signing config in gradle file of analyticssdk
 
 ## Intergration
-1. To integerate analytics sdk library add gradle depndency on the module `implementation project(":analyticssdk")`
-2. Add AnalyticsSDKInitializer file to initialize sdk on app startup.
+1. To integerate analytics sdk library add gradle depndency on the module `implementation project(":analyticssdk")` or `implementation("com.rignis.analyticssdk:1.0.0")` if published to some repository
+2. Add AnalyticsSDKInitializer file to initialize SDK on app startup. check : [AnalyticsSDKInitializer](app/src/main/java/com/rignis/demo/AnalyticsSDKInitializer.kt)
 3. while initializing sdk before calling `RignisAnalytics.initialize(context)` provide necessary configuration like baseUrl for analytics server
 4. other configuration can be changed afterwards as well which are not critical to functionality
-5. 
+5. Supported configuration from clients.
+   - setBaseUrl(Mandatory) : set base url for your analytics server.
+   - setBackgroundSyncEnabled(optional, default = true) : background sync allowed when device is idle, connected to network and battery is not low
+   - setForegroundSyncInterval(optional, default =  5 seconds) : after single event triggered how much time syncer will wait for batch bucket to get filled before sending this event to server
+   - setForegroundSyncBatchSize(optional, default = 10) : after 20 events syncer will not wait for foregroundSyncInterval to finish and forcefully try to sync with network with collected batch
+   - setBackgroundSyncIntervalInHour(optinal, default = 4 hours) : after every 4 hours syncer will check for device constraint conditions if allowed by system it will invoke syncing 
+   - setNetworkRequestPayloadSize(optional, default = 20) : max number of events which can be sent in single post request
+   - optOutAnalytics(optional, default = false) : if client decides to disable further analytics event to stop getting collected client can send this flag to true
+   - setEventExpiryTime(optional, default = 10 days) : event will be persisted by this much amount in milliseconds in offline database once event ttl expired it will be cleared when user opens the application
+   - setNetworkRequestTimeout(optional, default = 30 seconds) : timeout value for sync network request
+  
+   - Client id which is mandatory field should be added in application manfiest file with following example
+      `<meta-data
+            android:name="com.rignis.analyticssdk.clientid"
+            android:value="d625a8ed-d251-4c5f-bde0-4dd657a4f885" />`
 
 ## Build
-1. Currently aar file integration is failing due to koin class not found
+1. To publish setup repository credential in library publishing section under analyticssdk module and use `./gradlew :analyticssdk:publish` command to publish library to repository
+2. To build demo project using published library change `implementation(project(":analyticssdk"))` to `implementation("com.rignis.analyticssdk:1.0.0")`
 
 ## Design
 Architecture design of library
@@ -27,9 +42,3 @@ Architecture design of library
 
 ## Testing
 1. Testing in progress
-
-## Improvenment
-1. Fallback logic can be improved
-2. using compression technique to reduce api payload
-3. Keeping open tcp connection and reusing it for further event sync  
-
