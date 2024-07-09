@@ -18,14 +18,18 @@
 5. 
 
 ## Build
-1. 
+1. Currently aar file integration is failing due to koin class not found
 
 ## Design
 Architecture design of library
 ![Library Architecture](analyticssdk/design/design.webp?raw=true "System Design")
 
-## Testing
 
+## Testing
+1. Testing in progress
 
 ## Improvenment
+1. Fallback logic can be improved
+2. using compression technique to reduce api payload
+3. Keeping open tcp connection and reusing it for further event sync  
 
