@@ -6,9 +6,9 @@ import timber.log.Timber
 
 class LoggerInitializer : Initializer<Unit> {
     override fun create(context: Context) {
-//        if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
-//        }
+        }
     }
 
     override fun dependencies(): MutableList<Class<out Initializer<*>>> {
