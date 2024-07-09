@@ -35,6 +35,10 @@
 1. To publish setup repository credential in library publishing section under analyticssdk module and use `./gradlew :analyticssdk:publish` command to publish library to repository
 2. To build demo project using published library change `implementation(project(":analyticssdk"))` to `implementation("com.rignis.analyticssdk:1.0.0")`
 
+## Run
+1. to run if you do not have server URL, you can enable clearTextTraffic in debug build and use localhost as server using following repository : [](https://github.com/amitseervi/Simple-Analytics-Event-Listener)
+2. provide your local host ip address and port as base url in configuration
+
 ## Design
 Architecture design of library
 ![Library Architecture](analyticssdk/design/design.webp?raw=true "System Design")
