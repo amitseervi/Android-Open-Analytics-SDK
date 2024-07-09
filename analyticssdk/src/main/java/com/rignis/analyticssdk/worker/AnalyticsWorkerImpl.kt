@@ -25,16 +25,13 @@ internal class AnalyticsWorkerImpl(
         private const val EVENT_SUBMIT: Int = 2
         private const val DELETE_OLD_EVENTS: Int = 3
     }
-
     private val analyticsHandler: AnalyticsMessageHandler
-
     init {
         val handlerThread = HandlerThread("Analytics-Worker", HandlerThread.MIN_PRIORITY)
         handlerThread.start()
         analyticsHandler = AnalyticsMessageHandler(handlerThread.looper)
         networkConnectivityObserver.addCallback(this)
     }
-
 
     override fun sendEvent(name: String, params: Map<String, String>) {
         val message = analyticsHandler.obtainMessage(EVENT_SUBMIT)
@@ -54,10 +51,6 @@ internal class AnalyticsWorkerImpl(
         private var mRetryAfter: Long = 0L
         private var mFailedRetries: Long = 0L
 
-        private fun isSyncCallInProgress(): Boolean {
-            return mCallInProgress
-        }
-
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 EVENT_SUBMIT -> {
@@ -68,7 +61,7 @@ internal class AnalyticsWorkerImpl(
                     val dbSize = dbAdapter.getTotalEventCount()
                     if (networkConnectivityObserver.isNetworkAvailable) { //Check if network is available
                         Timber.tag(LOG_TAG).i("Network is Available")
-                        if (!isSyncCallInProgress()) { // check if already sync call is going on
+                        if (!mCallInProgress) { // check if already sync call is going on
                             Timber.tag(LOG_TAG).i("No Sync is in Progress")
                             // Batch size limit reached && also check if previous request have failed and retry time is in exponential backoff cycle
                             if (dbSize >= config.foregroundSyncBatchSize && mRetryAfter < System.currentTimeMillis()) {
@@ -104,6 +97,7 @@ internal class AnalyticsWorkerImpl(
                 EVENT_CLEANUP_EVENTS -> {
                     Timber.tag(LOG_TAG).i("Sync events with server")
                     mLastSyncTriggerTime = System.currentTimeMillis()
+                    mCallInProgress = true
                     syncer.sync(this@AnalyticsMessageHandler)
                 }
 
