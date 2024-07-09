@@ -59,4 +59,7 @@ internal abstract class EventDao {
 
     @Query("DELETE FROM rignis_events WHERE client_time_stamp<:timestamp")
     abstract fun deleteEventBeforeTimeStamp(timestamp: Long)
+
+    @Query("DELETE FROM rignis_events WHERE 1")
+    abstract fun deleteAllEvent()
 }

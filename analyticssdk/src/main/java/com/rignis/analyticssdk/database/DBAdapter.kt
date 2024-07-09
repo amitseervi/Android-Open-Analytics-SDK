@@ -24,4 +24,5 @@ internal interface DBAdapter {
     fun handleBatchRequestFail(batch: RequestBatch)
     fun handleBatchRequestSuccess(batch: RequestBatch)
     fun addEvent(name: String, params: Map<String, String>)
+    fun clearAllEvents()
 }

@@ -68,4 +68,8 @@ internal class DbAdapterImpl(private val dao: EventDao, private val config: Anal
             )
         )
     }
+
+    override fun clearAllEvents() {
+        dao.deleteAllEvent()
+    }
 }

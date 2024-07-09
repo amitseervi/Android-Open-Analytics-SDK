@@ -54,6 +54,15 @@ internal class AnalyticsWorkerImpl(
         analyticsHandler.sendMessage(message)
     }
 
+    override fun close() {
+        cleanup()
+        try {
+            analyticsHandler.looper.quitSafely()
+        } catch (_: Exception) {
+
+        }
+    }
+
     override fun cleanup() {
         analyticsHandler.sendMessage(analyticsHandler.obtainMessage(DELETE_OLD_EVENTS))
         analyticsHandler.sendMessage(analyticsHandler.obtainMessage(EVENT_CLEANUP_EVENTS))
