@@ -78,7 +78,7 @@ object RignisAnalytics {
             .build()
         apiService = retrofit.create(ApiService::class.java)
         dbAdapter = DbAdapter(db.eventDao(), config)
-        syncer = Syncer(dbAdapter, apiService, config)
+        syncer = Syncer(dbAdapter, apiService, config, networkConnectivityObserver)
         analyticsWorker = restartAnalyticsWorker(config, syncer, dbAdapter)
         analyticsWorker.cleanup()
         enqueBackgroundWorker(context, config)
@@ -114,7 +114,7 @@ object RignisAnalytics {
         if (::analyticsWorker.isInitialized) {
             analyticsWorker.cleanup()
         }
-        analyticsWorker = AnalyticsWorker(config, syncer, dbAdapter)
+        analyticsWorker = AnalyticsWorker(config, syncer, dbAdapter, networkConnectivityObserver)
         return analyticsWorker
     }
 

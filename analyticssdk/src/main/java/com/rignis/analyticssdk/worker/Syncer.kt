@@ -7,8 +7,11 @@ import com.rignis.analyticssdk.config.AnalyticsConfig
 import com.rignis.analyticssdk.database.DbAdapter
 import com.rignis.analyticssdk.database.EventEntity
 import com.rignis.analyticssdk.database.RequestBatch
+import com.rignis.analyticssdk.error.BadRequestException
+import com.rignis.analyticssdk.error.ServerErrorException
 import com.rignis.analyticssdk.network.ApiService
 import com.rignis.analyticssdk.network.EventDto
+import com.rignis.analyticssdk.network.NetworkConnectivityObserver
 import com.rignis.analyticssdk.network.SyncRequestPayloadDto
 import retrofit2.Call
 import retrofit2.Callback
@@ -19,47 +22,13 @@ private const val LOG_TAG = "Syncer"
 class Syncer(
     private val dbAdapter: DbAdapter,
     private val apiService: ApiService,
-    private val config: AnalyticsConfig
+    private val config: AnalyticsConfig,
+    private val networkConnectivityObserver: NetworkConnectivityObserver
 ) {
-    private var mCallInProgress: Boolean = false
-    private var mLastSyncFailed: Boolean = false
-    private var mLastSyncFailTimeStamp: Long = 0L
-    private var mLastSyncTriggerTimeStamp: Long = 0L
-    private val callbacks: MutableSet<OnRequestCompleteCallback> = mutableSetOf()
-
-    @Synchronized
-    fun addCallback(callback: OnRequestCompleteCallback) {
-        callbacks.add(callback)
-    }
-
-    fun shouldSyncEventsImmediately(): Boolean {
-        if (mCallInProgress) {
-            return false
+    fun sync(callback: OnRequestCompleteCallback) {
+        if (!networkConnectivityObserver.isNetworkAvailable()) {
+            callback.onFail(RuntimeException("Network not available"))
         }
-        if (System.currentTimeMillis() - mLastSyncTriggerTimeStamp < config.syncRequestDebounceTime) {
-            return false
-        }
-        if (mLastSyncFailed) {
-            // TODO : keep increasing fallback time on fail cases
-            if (System.currentTimeMillis() - mLastSyncTriggerTimeStamp < config.foregroundSyncInterval) {
-                return false
-            }
-        }
-        return true
-    }
-
-    fun syncDbEvents(): Boolean {
-        if (!shouldSyncEventsImmediately()) {
-            Timber.tag(LOG_TAG).i("Sync db event should not sync immediately")
-            return false
-        }
-        mLastSyncTriggerTimeStamp = System.currentTimeMillis()
-        mCallInProgress = true
-        sync()
-        return true
-    }
-
-    private fun sync() {
         val looper = Looper.myLooper() ?: return
         dbAdapter.resetFailedRequest()
         val batch = dbAdapter.readFirstNEvents(config.maxSyncRequestEventListSize)
@@ -73,55 +42,57 @@ class Syncer(
                 response: Response<Response<JsonObject>>
             ) {
                 handler.post {
-                    onRequestSuccess(batch)
+                    if (response.isSuccessful) {
+                        onRequestSuccess(batch, callback)
+                    } else {
+                        val code = response.code()
+                        if (code.isServerError()) {
+                            onRequestFailed(batch, callback, BadRequestException())
+                        } else if (code.isBadStatusCode()) {
+                            onRequestFailed(batch, callback, ServerErrorException())
+                        } else {
+                            onRequestFailed(batch, callback, Exception("Unknown error occured"))
+                        }
+                    }
                 }
             }
 
             override fun onFailure(request: Call<Response<JsonObject>>, error: Throwable) {
                 handler.post {
-                    onRequestFailed(batch)
+                    onRequestFailed(batch, callback, Exception(error))
                 }
             }
         })
     }
 
-    private fun onRequestFailed(batch: RequestBatch) {
+    private fun onRequestFailed(
+        batch: RequestBatch,
+        callback: OnRequestCompleteCallback,
+        exception: Exception
+    ) {
         Timber.tag(LOG_TAG).i("Sync db failed")
         dbAdapter.handleBatchRequestFail(batch)
-        mCallInProgress = false
-        mLastSyncFailed = true
-        mLastSyncFailTimeStamp = System.currentTimeMillis()
-        notifyFail()
+        callback.onFail(exception)
     }
 
-    private fun onRequestSuccess(batch: RequestBatch) {
+    private fun onRequestSuccess(batch: RequestBatch, callback: OnRequestCompleteCallback) {
         Timber.tag(LOG_TAG).i("Sync db success")
         dbAdapter.handleBatchRequestSuccess(batch)
-        mCallInProgress = false
-        mLastSyncFailed = false
-        mLastSyncFailTimeStamp = 0L
-        notifySuccess()
+        callback.onSuccess()
     }
-
-    @Synchronized
-    private fun notifySuccess() {
-        callbacks.forEach {
-            it.onSuccess()
-        }
-    }
-
-    @Synchronized
-    private fun notifyFail() {
-        callbacks.forEach {
-            it.onFail()
-        }
-    }
-
 
     interface OnRequestCompleteCallback {
         fun onSuccess()
-        fun onFail()
+        fun onFail(exception: Exception)
     }
+}
+
+private fun Int.isBadStatusCode(): Boolean {
+    return this in 400..499
+}
+
+private fun Int.isServerError(): Boolean {
+    return this in 500..599
 }
 
 private fun EventEntity.toSyncRequestPayload(): EventDto {
@@ -131,3 +102,4 @@ private fun EventEntity.toSyncRequestPayload(): EventDto {
         this.clientTimeStamp,
     )
 }
+
