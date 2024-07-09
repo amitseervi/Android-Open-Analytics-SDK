@@ -44,7 +44,7 @@ object RignisAnalytics {
         config.backgroundSyncIntervalInHour = value
     }
 
-    fun setBackgroundSyncBatchSize(size: Int) {
+    fun setNetworkRequestPayloadSize(size: Int) {
         config.maxSyncRequestEventListSize = size
     }
 
@@ -54,6 +54,14 @@ object RignisAnalytics {
 
     fun setBaseUrl(baseUrl: String) {
         config.baseUrl = baseUrl
+    }
+
+    fun setEventExpiryTime(eventExpiryTime: Long) {
+        config.eventLifeExpiryTime = eventExpiryTime
+    }
+
+    fun setNetworkRequestTimeout(timeOutInMillis: Long) {
+        config.syncRequestTimeOut = timeOutInMillis
     }
 
     private fun initializeDi(context: Context) {

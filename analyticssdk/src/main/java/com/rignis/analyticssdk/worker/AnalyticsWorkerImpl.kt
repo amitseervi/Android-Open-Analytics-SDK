@@ -70,7 +70,8 @@ internal class AnalyticsWorkerImpl(
                         Timber.tag(LOG_TAG).i("Network is Available")
                         if (!isSyncCallInProgress()) { // check if already sync call is going on
                             Timber.tag(LOG_TAG).i("No Sync is in Progress")
-                            if (dbSize >= config.foregroundSyncBatchSize) {
+                            // Batch size limit reached && also check if previous request have failed and retry time is in exponential backoff cycle
+                            if (dbSize >= config.foregroundSyncBatchSize && mRetryAfter < System.currentTimeMillis()) {
                                 Timber.tag(LOG_TAG).i("Sync Immediately")
                                 removeMessages(EVENT_CLEANUP_EVENTS)
                                 sendMessage(obtainMessage(EVENT_CLEANUP_EVENTS))

@@ -20,6 +20,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    id("maven-publish")
 }
 
 android {
@@ -34,7 +35,12 @@ android {
     }
 
     val keystoreProperties = Properties()
-    keystoreProperties.load(File("keystore/keystore.properties").inputStream())
+    keystoreProperties.load(
+        File(
+            project.rootProject.projectDir,
+            "keystore/keystore.properties"
+        ).inputStream()
+    )
 
     signingConfigs {
         create("release") {
@@ -68,6 +74,44 @@ android {
 
     buildFeatures {
         buildConfig = true
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["debug"])
+
+                groupId = "com.rignis"
+                artifactId = "analyticssdk"
+                version = "1.0.0"
+
+                pom {
+                    name.set("Sample Analytics SDK library")
+                    description.set("Open analytics sdk library for triggering analytics event to server using post api request")
+                    url.set("https://github.com/amitseervi/analyticssdk")
+
+                    licenses {
+                        license {
+                            name.set("The Apache License, Version 2.0")
+                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                            distribution.set("repo")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id.set("amitseervi")
+                            name.set("Amitkumar Chaudhary")
+                            email.set("amitchaudhary.adc@gmail.com")
+                        }
+                    }
+
+                    scm { url = "https://svn.apache.org/viewvc/maven" }
+                }
+            }
+        }
     }
 }
 

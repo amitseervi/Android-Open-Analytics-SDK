@@ -1,3 +1,5 @@
+import java.util.Properties
+
 /*
  * Copyright (c) [2024] Amitkumar Chaudhary
  *
@@ -38,10 +40,31 @@ android {
             useSupportLibrary = true
         }
     }
+    val keystoreProperties = Properties()
+    keystoreProperties.load(
+        File(
+            project.rootProject.projectDir,
+            "keystore/keystore.properties"
+        ).inputStream()
+    )
+
+    signingConfigs {
+        create("release") {
+            keyAlias =
+                keystoreProperties.getProperty("rignis-analytics-release-key-alias") as String
+            storeFile = File(project.rootProject.projectDir, "keystore/analytics-sdk-keystore.jks")
+            keyPassword =
+                keystoreProperties.getProperty("rignis-analytics-release-key-password") as String
+            storePassword =
+                keystoreProperties.getProperty("rignis-analytics-release-store-password") as String
+        }
+    }
+
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -79,7 +102,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(files("/Users/amit/MyProjects/android/AnalyticsSdk/analyticssdk/build/outputs/aar/analyticssdk-debug.aar"))
+    implementation(project(":analyticssdk"))
+//    implementation("com.rignis.analyticssdk:1.0.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
