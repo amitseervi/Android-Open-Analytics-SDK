@@ -21,8 +21,11 @@
 1. 
 
 ## Design
+Architecture design of library
+![Library Architecture](analyticssdk/design/design.webp?raw=true "System Design")
 
 ## Testing
+
 
 ## Improvenment
 
