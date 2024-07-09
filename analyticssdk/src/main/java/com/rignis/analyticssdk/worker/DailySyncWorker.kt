@@ -3,11 +3,12 @@ package com.rignis.analyticssdk.worker
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.rignis.analyticssdk.RignisAnalytics
+import org.koin.java.KoinJavaComponent
 import kotlin.coroutines.suspendCoroutine
 
 internal class DailySyncWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
+    private val syncer by KoinJavaComponent.inject<Syncer>(Syncer::class.java)
     override suspend fun doWork(): Result {
         if (runAttemptCount > 3) {
             return Result.failure()
@@ -31,7 +32,7 @@ internal class DailySyncWorker(context: Context, parameters: WorkerParameters) :
                     cont.resumeWith(kotlin.Result.failure(exception))
                 }
             }
-            RignisAnalytics.syncer.sync(callback)
+            syncer.sync(callback)
         }
     }
 

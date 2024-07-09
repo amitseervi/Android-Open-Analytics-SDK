@@ -81,5 +81,6 @@ dependencies {
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.okhttp.converter.gson)
 
+    implementation(libs.koin.android)
 
 }

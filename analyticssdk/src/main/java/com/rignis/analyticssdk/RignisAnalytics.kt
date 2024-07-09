@@ -1,35 +1,25 @@
 package com.rignis.analyticssdk
 
 import android.content.Context
-import androidx.room.Room
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.rignis.analyticssdk.config.AnalyticsConfig
-import com.rignis.analyticssdk.config.MetaDataReader
-import com.rignis.analyticssdk.database.DbAdapter
-import com.rignis.analyticssdk.database.RignisEventDB
-import com.rignis.analyticssdk.network.ApiService
-import com.rignis.analyticssdk.network.HeaderInterceptor
-import com.rignis.analyticssdk.network.NetworkConnectivityObserver
+import com.rignis.analyticssdk.config.MetaDataReaderImpl
+import com.rignis.analyticssdk.di.configModule
+import com.rignis.analyticssdk.di.dbModule
+import com.rignis.analyticssdk.di.networkModule
+import com.rignis.analyticssdk.di.syncerModule
+import com.rignis.analyticssdk.di.workerModule
 import com.rignis.analyticssdk.worker.AnalyticsWorker
-import com.rignis.analyticssdk.worker.DailySyncWorker
-import com.rignis.analyticssdk.worker.Syncer
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.time.Duration
+import com.rignis.analyticssdk.worker.DailySyncScheduler
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
+import org.koin.java.KoinJavaComponent
 
 object RignisAnalytics {
-    private lateinit var dbAdapter: DbAdapter
     internal val config: AnalyticsConfig = AnalyticsConfig()
-    internal lateinit var analyticsWorker: AnalyticsWorker
-    internal val networkConnectivityObserver = NetworkConnectivityObserver()
-    internal lateinit var syncer: Syncer
-    internal lateinit var apiService: ApiService
-    internal lateinit var db: RignisEventDB
+    private val analyticsWorker by KoinJavaComponent.inject<AnalyticsWorker>(AnalyticsWorker::class.java)
+    private val dailySyncScheduler by KoinJavaComponent.inject<DailySyncScheduler>(
+        DailySyncScheduler::class.java
+    )
 
     fun setBackgroundSyncEnabled(enabled: Boolean) {
         config.backgroundSyncEnabled = enabled
@@ -59,63 +49,30 @@ object RignisAnalytics {
         config.baseUrl = baseUrl
     }
 
+    private fun initializeDi(context: Context) {
+        startKoin {
+            androidContext(context)
+            modules(
+                networkModule,
+                workerModule,
+                syncerModule,
+                configModule(config),
+                dbModule,
+            )
+        }
+    }
+
     fun initialize(context: Context) {
-        config.setFrom(MetaDataReader(context))
+        config.setFrom(MetaDataReaderImpl(context))
         assert(config.baseUrl.isNotEmpty()) {
             "Base Url can not be empty"
         }
         assert(config.clientId.isNotEmpty()) {
             "Client id should be provided in meta data of application"
         }
-        networkConnectivityObserver.subscribe(context)
-        db = Room.databaseBuilder(context, RignisEventDB::class.java, "rignis_event_db").build()
-        val retrofit = Retrofit.Builder().baseUrl(config.baseUrl).client(
-            OkHttpClient.Builder()
-                .callTimeout(Duration.ofMillis(config.syncRequestTimeOut))
-                .addInterceptor(HeaderInterceptor(config))
-                .build()
-        ).addConverterFactory(GsonConverterFactory.create())
-            .build()
-        apiService = retrofit.create(ApiService::class.java)
-        dbAdapter = DbAdapter(db.eventDao(), config)
-        syncer = Syncer(dbAdapter, apiService, config, networkConnectivityObserver)
-        analyticsWorker = restartAnalyticsWorker(config, syncer, dbAdapter)
+        initializeDi(context)
         analyticsWorker.cleanup()
-        enqueBackgroundWorker(context, config)
-    }
-
-    private fun enqueBackgroundWorker(context: Context, config: AnalyticsConfig) {
-        val workManager = WorkManager.getInstance(context)
-        if (!config.backgroundSyncEnabled) {
-            workManager.cancelUniqueWork("rignis-data-sync")
-            return
-        }
-        val periodicWorkRequest = PeriodicWorkRequestBuilder<DailySyncWorker>(
-            Duration.ofHours(config.backgroundSyncIntervalInHour.toLong())
-        ).setConstraints(
-            Constraints.Builder()
-                .setRequiresDeviceIdle(true)
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .setRequiresBatteryNotLow(true)
-                .build()
-        ).build()
-        workManager.enqueueUniquePeriodicWork(
-            "rignis-data-sync",
-            ExistingPeriodicWorkPolicy.KEEP,
-            periodicWorkRequest
-        )
-    }
-
-    private fun restartAnalyticsWorker(
-        config: AnalyticsConfig,
-        syncer: Syncer,
-        dbAdapter: DbAdapter
-    ): AnalyticsWorker {
-        if (::analyticsWorker.isInitialized) {
-            analyticsWorker.cleanup()
-        }
-        analyticsWorker = AnalyticsWorker(config, syncer, dbAdapter, networkConnectivityObserver)
-        return analyticsWorker
+        dailySyncScheduler.schedule(config)
     }
 
     fun sendEvent(name: String, params: Map<String, String>) {
