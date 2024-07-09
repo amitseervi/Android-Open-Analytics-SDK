@@ -80,7 +80,14 @@ dependencies {
 
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.okhttp.converter.gson)
+    androidTestImplementation(libs.okhttp.mockwebserver)
 
     implementation(libs.koin.android)
+    androidTestImplementation(libs.koin.test)
+    androidTestImplementation(libs.koin.android.test)
+    androidTestImplementation(libs.truth)
+
+
+
 
 }

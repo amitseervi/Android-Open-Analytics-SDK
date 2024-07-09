@@ -11,11 +11,10 @@ internal class MetaDataReaderImpl(context: Context) : MetaDataReader {
     private val metaDataBundle = applicationInfo.metaData
 
     override fun getClientId(): String? {
-        return metaDataBundle.getString(META_DATA_CLIENT_ID)
+        return metaDataBundle?.getString(META_DATA_CLIENT_ID)
     }
 
     companion object {
         private const val META_DATA_CLIENT_ID = "com.rignis.analyticssdk.clientid"
-
     }
 }

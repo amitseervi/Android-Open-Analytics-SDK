@@ -1,8 +1,12 @@
 package com.rignis.analyticssdk
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.rignis.analyticssdk.config.AnalyticsConfig
+import com.rignis.analyticssdk.config.MetaDataReader
 import com.rignis.analyticssdk.config.MetaDataReaderImpl
+import com.rignis.analyticssdk.di.RignisIsolationContext
+import com.rignis.analyticssdk.di.RignisKoinComponent
 import com.rignis.analyticssdk.di.configModule
 import com.rignis.analyticssdk.di.dbModule
 import com.rignis.analyticssdk.di.networkModule
@@ -11,13 +15,16 @@ import com.rignis.analyticssdk.di.workerModule
 import com.rignis.analyticssdk.worker.AnalyticsWorker
 import com.rignis.analyticssdk.worker.DailySyncScheduler
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.context.startKoin
-import org.koin.java.KoinJavaComponent
 
 object RignisAnalytics {
     internal val config: AnalyticsConfig = AnalyticsConfig()
-    private val analyticsWorker by KoinJavaComponent.inject<AnalyticsWorker>(AnalyticsWorker::class.java)
-    private val dailySyncScheduler by KoinJavaComponent.inject<DailySyncScheduler>(
+
+    @VisibleForTesting
+    internal var metaDataReaderBuilder: (context: Context) -> MetaDataReader = { context ->
+        MetaDataReaderImpl(context)
+    }
+    private val analyticsWorker by RignisKoinComponent.inject<AnalyticsWorker>(AnalyticsWorker::class.java)
+    private val dailySyncScheduler by RignisKoinComponent.inject<DailySyncScheduler>(
         DailySyncScheduler::class.java
     )
 
@@ -50,7 +57,7 @@ object RignisAnalytics {
     }
 
     private fun initializeDi(context: Context) {
-        startKoin {
+        RignisIsolationContext.startKoin {
             androidContext(context)
             modules(
                 networkModule,
@@ -63,7 +70,7 @@ object RignisAnalytics {
     }
 
     fun initialize(context: Context) {
-        config.setFrom(MetaDataReaderImpl(context))
+        config.setFrom(metaDataReaderBuilder(context))
         assert(config.baseUrl.isNotEmpty()) {
             "Base Url can not be empty"
         }

@@ -33,6 +33,9 @@ internal class SyncerImpl(
         val looper = Looper.myLooper() ?: return
         dbAdapter.resetFailedRequest()
         val batch = dbAdapter.readFirstNEvents(config.maxSyncRequestEventListSize)
+        if (batch.events.isEmpty()) {
+            return callback.onSuccess()
+        }
         val call = apiService.postEvent(SyncRequestPayloadDto(batch.events.map {
             it.toSyncRequestPayload()
         }))

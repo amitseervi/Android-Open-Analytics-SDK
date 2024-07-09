@@ -42,7 +42,7 @@ internal class AnalyticsWorkerImpl(
     }
 
     override fun cleanup() {
-        analyticsHandler.sendMessage(analyticsHandler.obtainMessage(EVENT_CLEANUP_EVENTS))
+//        analyticsHandler.sendMessage(analyticsHandler.obtainMessage(EVENT_CLEANUP_EVENTS))
     }
 
     private inner class AnalyticsMessageHandler(looper: Looper) : android.os.Handler(looper),
@@ -65,26 +65,34 @@ internal class AnalyticsWorkerImpl(
                     }
                     val dbSize = dbAdapter.getTotalEventCount()
                     if (networkConnectivityObserver.isNetworkAvailable) { //Check if network is available
+                        Timber.tag(LOG_TAG).i("Network is Available")
                         if (!isSyncCallInProgress()) { // check if already sync call is going on
-                            if (!hasMessages(EVENT_CLEANUP_EVENTS)) {
-                                if (dbSize > config.foregroundSyncBatchSize) {
-                                    // if we have reached threashold where
-                                    // we need to trigger force sync request
-                                    sendMessage(obtainMessage(EVENT_CLEANUP_EVENTS))
-                                } else {
-                                    sendMessageDelayed(
-                                        obtainMessage(EVENT_CLEANUP_EVENTS),
-                                        config.foregroundSyncInterval
-                                    )
-                                }
+                            Timber.tag(LOG_TAG).i("No Sync is in Progress")
+                            if (dbSize >= config.foregroundSyncBatchSize) {
+                                Timber.tag(LOG_TAG).i("Sync Immediately")
+                                removeMessages(EVENT_CLEANUP_EVENTS)
+                                sendMessage(obtainMessage(EVENT_CLEANUP_EVENTS))
+                            } else if (!hasMessages(EVENT_CLEANUP_EVENTS)) {
+                                Timber.tag(LOG_TAG).i("No Sync Message is scheduled")
+                                Timber.tag(LOG_TAG)
+                                    .i("Db size = ${dbSize} and foregroundSyncBatchSize = ${config.foregroundSyncBatchSize}")
+                                Timber.tag(LOG_TAG)
+                                    .i("Sync Delayed ${config.foregroundSyncInterval}")
+                                sendMessageDelayed(
+                                    obtainMessage(EVENT_CLEANUP_EVENTS),
+                                    config.foregroundSyncInterval
+                                )
                             } else {
+                                Timber.tag(LOG_TAG).i("Sync message already scheduled")
                                 // not scheduling duplicate sync event
                             }
                         } else {
+                            Timber.tag(LOG_TAG).i("Sync network call is already in progress")
                             // Do nothing we will check later when sync call complete
                             // and enqueue new sync request on success
                         }
                     } else {
+                        Timber.tag(LOG_TAG).i("Network not available for syncing")
                         // if network is not available do not trigger sync request
                     }
 
