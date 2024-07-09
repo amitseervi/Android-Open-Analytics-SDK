@@ -21,6 +21,11 @@ internal class DbAdapterImpl(private val dao: EventDao, private val config: Anal
     }
 
     @WorkerThread
+    override fun deleteLongPendingRequests(timestamp: Long) {
+        return dao.deleteEventBeforeTimeStamp(timestamp)
+    }
+
+    @WorkerThread
     override fun readFirstNEvents(n: Int): RequestBatch {
         val time = System.currentTimeMillis()
         return RequestBatch(time, dao.readBatchAndUpdate(n, time))

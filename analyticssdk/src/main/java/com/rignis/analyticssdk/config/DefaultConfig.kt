@@ -1,6 +1,9 @@
 package com.rignis.analyticssdk.config
 
+private const val ONE_DAY: Long = 24 * 60 * 60 * 1000
+private const val TEN_DAY: Long = 10 * ONE_DAY
 object DefaultConfig {
+    const val EVENT_EXPIRY_TIME: Long = TEN_DAY
     const val SYNC_REQUEST_BASE_URL: String = ""
     const val SYNC_REQUEST_DEBOUNCE_TIME: Long = 2000
     const val SYNC_REQUEST_TIME_OUT: Long = 30 * 1000

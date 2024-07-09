@@ -23,6 +23,7 @@ internal class AnalyticsWorkerImpl(
     companion object {
         private const val EVENT_CLEANUP_EVENTS: Int = 1
         private const val EVENT_SUBMIT: Int = 2
+        private const val DELETE_OLD_EVENTS: Int = 3
     }
 
     private val analyticsHandler: AnalyticsMessageHandler
@@ -42,7 +43,8 @@ internal class AnalyticsWorkerImpl(
     }
 
     override fun cleanup() {
-//        analyticsHandler.sendMessage(analyticsHandler.obtainMessage(EVENT_CLEANUP_EVENTS))
+        analyticsHandler.sendMessage(analyticsHandler.obtainMessage(DELETE_OLD_EVENTS))
+        analyticsHandler.sendMessage(analyticsHandler.obtainMessage(EVENT_CLEANUP_EVENTS))
     }
 
     private inner class AnalyticsMessageHandler(looper: Looper) : android.os.Handler(looper),
@@ -102,6 +104,11 @@ internal class AnalyticsWorkerImpl(
                     Timber.tag(LOG_TAG).i("Sync events with server")
                     mLastSyncTriggerTime = System.currentTimeMillis()
                     syncer.sync(this@AnalyticsMessageHandler)
+                }
+
+                DELETE_OLD_EVENTS -> {
+                    Timber.tag(LOG_TAG).i("Delete older unsynced events")
+                    dbAdapter.deleteLongPendingRequests(System.currentTimeMillis() - config.eventLifeExpiryTime)
                 }
 
                 else -> {

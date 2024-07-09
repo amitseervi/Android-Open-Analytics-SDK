@@ -1,6 +1,7 @@
 package com.rignis.analyticssdk.config
 
 internal class AnalyticsConfig {
+    var eventLifeExpiryTime: Long = DefaultConfig.EVENT_EXPIRY_TIME
     var clientId: String = ""
         private set
     var baseUrl: String = DefaultConfig.SYNC_REQUEST_BASE_URL
