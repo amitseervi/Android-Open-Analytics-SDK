@@ -4,6 +4,7 @@
 1. use git clone to download project `git clone https://github.com/Rudderstack-Hiring/sdk-assignment-june-2024-amitseervi.git`
 2. checkout branch solution-v2 using `git checkout solution-v2`
 3. open project into android studio
+4. For sample local server checkout repository `git clone https://github.com/amitseervi/Simple-Analytics-Event-Listener.git`
 
 ## Configuration
 1. Once project opened in android studio sync the project.
