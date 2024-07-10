@@ -45,4 +45,4 @@ Architecture design of library
 
 
 ## Testing
-1. Testing in progress
+1. Few test cases are present under androidTest source. to run instrumentation test connect android device and run command `./gradlew :analyticssdk:connectedAndroidTest`
