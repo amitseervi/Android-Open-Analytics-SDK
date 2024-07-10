@@ -21,7 +21,7 @@ import com.rignis.analyticssdk.RignisAnalytics
 
 class AnalyticsSDKInitializer : Initializer<Unit> {
     override fun create(context: Context) {
-        RignisAnalytics.setBaseUrl("http://192.168.0.194:3000")
+        RignisAnalytics.setBaseUrl("https://www.example.com")
         RignisAnalytics.initialize(context)
     }
 

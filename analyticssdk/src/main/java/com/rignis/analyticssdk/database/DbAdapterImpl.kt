@@ -31,11 +31,6 @@ internal class DbAdapterImpl(private val dao: EventDao, private val config: Anal
     }
 
     @WorkerThread
-    override fun hasPendingRequest(): Boolean {
-        return dao.countInProgressEvents() > 0
-    }
-
-    @WorkerThread
     override fun deleteLongPendingRequests(timestamp: Long) {
         return dao.deleteEventBeforeTimeStamp(timestamp)
     }
