@@ -36,17 +36,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun HomePage(testFunction: () -> Unit) {
+fun HomePage() {
     val viewModel = hiltViewModel<HomeViewModel>()
     val state = viewModel.counterState.collectAsState()
-    HomePageLayout(viewModel::onButtonClick, state, testFunction)
+    HomePageLayout(viewModel::onButtonClick, state)
 }
 
 @Composable
 private fun HomePageLayout(
     onButtonClick: () -> Unit,
-    counterState: State<Int>,
-    testFunction: () -> Unit,
+    counterState: State<Int>
 ) {
     Scaffold { innerPadding ->
         Column(
@@ -62,10 +61,6 @@ private fun HomePageLayout(
             Button(onButtonClick) {
                 Text("Button")
             }
-            Spacer(Modifier.height(12.dp))
-            Button(testFunction) {
-                Text("Test")
-            }
         }
     }
 }
@@ -77,5 +72,5 @@ private fun PreviewHomePageLayout() {
         remember {
             mutableIntStateOf(0)
         }
-    HomePageLayout({ state.intValue++ }, state, {})
+    HomePageLayout({ state.intValue++ }, state)
 }

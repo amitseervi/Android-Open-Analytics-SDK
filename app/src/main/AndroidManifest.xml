@@ -38,6 +38,10 @@
             <meta-data
                 android:name="com.rignis.demo.AnalyticsSDKInitializer"
                 android:value="androidx.startup" />
+
+            <meta-data
+                android:name="com.rignis.demo.LoggerInitializer"
+                android:value="androidx.startup" />
         </provider>
     </application>
 

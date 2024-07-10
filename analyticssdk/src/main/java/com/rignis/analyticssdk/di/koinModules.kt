@@ -32,9 +32,11 @@ import com.rignis.analyticssdk.worker.DailySyncSchedulerImpl
 import com.rignis.analyticssdk.worker.Syncer
 import com.rignis.analyticssdk.worker.SyncerImpl
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import timber.log.Timber
 import java.time.Duration
 
 internal val networkModule = module {
@@ -43,6 +45,9 @@ internal val networkModule = module {
         OkHttpClient.Builder()
             .callTimeout(Duration.ofMillis(config.syncRequestTimeOut))
             .addInterceptor(HeaderInterceptor(config))
+            .addInterceptor(HttpLoggingInterceptor { message: String ->
+                Timber.tag("RignisNetwork").d(message)
+            })
             .build()
     }
 

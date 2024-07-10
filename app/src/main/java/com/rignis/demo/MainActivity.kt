@@ -30,9 +30,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AnalyticsSdkTheme {
-                HomePage {
-
-                }
+                HomePage()
             }
         }
     }

@@ -72,7 +72,7 @@ internal class AnalyticsWorkerImpl(
         Syncer.OnRequestCompleteCallback {
         private var mCallInProgress: Boolean = false
         private var mLastSyncTriggerTime: Long = 0L
-        private var mRetryAfter: Long = 0L
+        private var mRetryDelay: Long = 0L
         private var mFailedRetries: Long = 0L
 
         override fun handleMessage(msg: Message) {
@@ -88,7 +88,7 @@ internal class AnalyticsWorkerImpl(
                         if (!mCallInProgress) { // check if already sync call is going on
                             Timber.tag(LOG_TAG).i("No Sync is in Progress")
                             // Batch size limit reached && also check if previous request have failed and retry time is in exponential backoff cycle
-                            if (dbSize >= config.foregroundSyncBatchSize && mRetryAfter < System.currentTimeMillis()) {
+                            if (dbSize >= config.foregroundSyncBatchSize && (mRetryDelay + mLastSyncTriggerTime) < System.currentTimeMillis()) {
                                 Timber.tag(LOG_TAG).i("Sync Immediately")
                                 removeMessages(EVENT_CLEANUP_EVENTS)
                                 sendMessage(obtainMessage(EVENT_CLEANUP_EVENTS))
@@ -119,10 +119,12 @@ internal class AnalyticsWorkerImpl(
                 }
 
                 EVENT_CLEANUP_EVENTS -> {
-                    Timber.tag(LOG_TAG).i("Sync events with server")
-                    mLastSyncTriggerTime = System.currentTimeMillis()
-                    mCallInProgress = true
-                    syncer.sync(this@AnalyticsMessageHandler)
+                    if (dbAdapter.getTotalEventCount() > 0) {
+                        Timber.tag(LOG_TAG).i("---> Sync events with server")
+                        mLastSyncTriggerTime = System.currentTimeMillis()
+                        mCallInProgress = true
+                        syncer.sync(this@AnalyticsMessageHandler)
+                    }
                 }
 
                 DELETE_OLD_EVENTS -> {
@@ -137,19 +139,19 @@ internal class AnalyticsWorkerImpl(
         }
 
         override fun onSuccess() {
-            mRetryAfter = 0
+            mRetryDelay = 0
             mCallInProgress = false
             mFailedRetries = 0
         }
 
         override fun onFail(exception: Exception) {
-            mRetryAfter =
+            mRetryDelay =
                 (2.0.pow(mFailedRetries.toDouble()).roundToLong() * ONE_MINUTE).coerceAtMost(
                     TEN_MINUTE
                 )
             mCallInProgress = false
             mFailedRetries++
-            sendMessageDelayed(obtainMessage(EVENT_CLEANUP_EVENTS), mRetryAfter)
+            sendMessageDelayed(obtainMessage(EVENT_CLEANUP_EVENTS), mRetryDelay)
         }
     }
 

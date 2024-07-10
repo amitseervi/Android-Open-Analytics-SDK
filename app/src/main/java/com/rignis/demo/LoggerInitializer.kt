@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rignis.analyticssdk
+package com.rignis.demo
 
 import android.content.Context
 import androidx.startup.Initializer
+import com.rignis.demo.BuildConfig
 import timber.log.Timber
 
 class LoggerInitializer : Initializer<Unit> {
