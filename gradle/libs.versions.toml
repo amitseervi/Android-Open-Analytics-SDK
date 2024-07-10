@@ -32,6 +32,7 @@ lifecycleRuntimeKtx = "2.8.3"
 loggingInterceptor = "4.12.0"
 material = "1.12.0"
 minSdkVersion = "28"
+mockkVersion = "1.13.11"
 mockwebserver = "4.12.0"
 multidex = "2.0.1"
 navigationCompose = "2.8.0-beta04"
@@ -91,6 +92,8 @@ koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinAndroid" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroid" }
 koin-android-test = { module = "io.insert-koin:koin-android-test", version.ref = "koinAndroidTest" }
 koin-test = { module = "io.insert-koin:koin-test-junit4", version.ref = "koinAndroid" }
+mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockkVersion" }
+mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockkVersion" }
 okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "mockwebserver" }
 okhttp-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "converterMoshi" }

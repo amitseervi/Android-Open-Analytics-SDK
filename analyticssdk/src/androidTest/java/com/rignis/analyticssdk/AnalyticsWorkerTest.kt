@@ -36,7 +36,7 @@ class AnalyticsWorkerTest {
         override val isNetworkAvailable: Boolean = true
 
         override fun addCallback(callback: NetworkConnectivityObserver.Callback) {
-
+            // do not send callbacks because it add another complexity while testing
         }
     }
 
@@ -65,7 +65,6 @@ class AnalyticsWorkerTest {
 
     @Test
     fun testAnalyticsWorkerBatchFullEventSyncTrigger() {
-//        Timber.plant(Timber.DebugTree())
         val analyticsWorker by inject<AnalyticsWorker>(AnalyticsWorker::class.java)
         val syncer by inject<Syncer>(Syncer::class.java)
         Truth.assertThat(syncer).isInstanceOf(TestSyncer::class.java)
@@ -96,6 +95,22 @@ class AnalyticsWorkerTest {
         Thread.sleep(4000)
         Truth.assertThat((syncer as TestSyncer).syncerCallCount).isEqualTo(0)
         Thread.sleep(5000)
+        Truth.assertThat((syncer as TestSyncer).syncerCallCount).isEqualTo(1)
+    }
+
+
+    @Test
+    fun triggerAnalyticsEventImmediatelyAfterBatchIsFull() {
+        val analyticsWorker by inject<AnalyticsWorker>(AnalyticsWorker::class.java)
+        val syncer by inject<Syncer>(Syncer::class.java)
+        Truth.assertThat(syncer).isInstanceOf(TestSyncer::class.java)
+        val dbAdapter by inject<DBAdapter>(DBAdapter::class.java)
+        dbAdapter.clearAllEvents()
+        Truth.assertThat(dbAdapter.getTotalEventCount()).isEqualTo(0)
+        repeat(10){index->
+            analyticsWorker.sendEvent("test_event", mapOf("counter" to "${index + 1}"))
+        }
+        Thread.sleep(500)
         Truth.assertThat((syncer as TestSyncer).syncerCallCount).isEqualTo(1)
     }
 }

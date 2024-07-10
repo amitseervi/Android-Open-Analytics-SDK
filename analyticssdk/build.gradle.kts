@@ -163,4 +163,7 @@ dependencies {
     androidTestImplementation(libs.koin.test)
     androidTestImplementation(libs.koin.android.test)
     androidTestImplementation(libs.truth)
+//    androidTestImplementation(libs.mockk.android)
+//    androidTestImplementation(libs.mockk.agent)
+
 }
