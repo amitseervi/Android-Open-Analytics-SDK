@@ -23,6 +23,7 @@ internal class HeaderInterceptor(private val config: AnalyticsConfig) : Intercep
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request().newBuilder()
             .addHeader("rignis-client-id", config.clientId)
+            .addHeader("rignis-platform-name", config.platformName)
             .build()
         return chain.proceed(request)
     }

@@ -28,6 +28,9 @@ internal class AnalyticsConfig {
     var maxSyncRequestEventListSize:Int = DefaultConfig.MAX_SYNC_REQ_EVENT_LIST_SIZE
     var optOutAnalytics:Boolean = DefaultConfig.OPT_OUT_ANALYTICS
 
+    val platformName: String
+        get() = PlatformVariables.PLATFORM_NAME
+
     fun setFrom(metaDataReader: MetaDataReader) {
         clientId = metaDataReader.getClientId().orEmpty()
     }
