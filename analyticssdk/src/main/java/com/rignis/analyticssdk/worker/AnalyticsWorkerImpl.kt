@@ -157,6 +157,7 @@ internal class AnalyticsWorkerImpl(
 
     override fun onNetworkAvailable() {
         if (!analyticsHandler.hasMessages(EVENT_CLEANUP_EVENTS)) {
+            Timber.tag(LOG_TAG).i("On Network available send sync message")
             analyticsHandler.sendMessage(analyticsHandler.obtainMessage(EVENT_CLEANUP_EVENTS))
         }
     }

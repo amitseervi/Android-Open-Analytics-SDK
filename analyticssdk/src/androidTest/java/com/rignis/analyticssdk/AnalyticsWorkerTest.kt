@@ -9,6 +9,7 @@ import com.rignis.analyticssdk.di.configModule
 import com.rignis.analyticssdk.di.dbModule
 import com.rignis.analyticssdk.di.networkModule
 import com.rignis.analyticssdk.di.workerModule
+import com.rignis.analyticssdk.network.NetworkConnectivityObserver
 import com.rignis.analyticssdk.worker.AnalyticsWorker
 import com.rignis.analyticssdk.worker.Syncer
 import org.junit.Rule
@@ -18,7 +19,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 import org.koin.test.KoinTestRule
-import timber.log.Timber
 
 
 @RunWith(AndroidJUnit4::class)
@@ -32,6 +32,14 @@ class AnalyticsWorkerTest {
 
     }
 
+    internal class TestNetworkConnectivityObserver : NetworkConnectivityObserver {
+        override val isNetworkAvailable: Boolean = true
+
+        override fun addCallback(callback: NetworkConnectivityObserver.Callback) {
+
+        }
+    }
+
     @get:Rule
     val koinTestRule = KoinTestRule.create {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
@@ -41,10 +49,16 @@ class AnalyticsWorkerTest {
             workerModule,
             configModule(AnalyticsConfig().apply {
                 foregroundSyncBatchSize = 10
+                foregroundSyncInterval = 5000
             }),
             dbModule,
             module {
                 single<Syncer> { TestSyncer() }
+            },
+            module {
+                single<NetworkConnectivityObserver> {
+                    TestNetworkConnectivityObserver()
+                }
             }
         )
     }
@@ -61,8 +75,27 @@ class AnalyticsWorkerTest {
         repeat(10) {
             analyticsWorker.sendEvent("test_event", mapOf())
         }
-        Thread.sleep(1000)
+        Thread.sleep(500)
         analyticsWorker.close()
+        Truth.assertThat((syncer as TestSyncer).syncerCallCount).isEqualTo(1)
+    }
+
+
+    @Test
+    fun testSingleEventShouldGetTriggeredAfterSyncInterval() {
+//        Timber.plant(Timber.DebugTree())
+        val analyticsWorker by inject<AnalyticsWorker>(AnalyticsWorker::class.java)
+        val syncer by inject<Syncer>(Syncer::class.java)
+        Truth.assertThat(syncer).isInstanceOf(TestSyncer::class.java)
+        val dbAdapter by inject<DBAdapter>(DBAdapter::class.java)
+        dbAdapter.clearAllEvents()
+        Truth.assertThat(dbAdapter.getTotalEventCount()).isEqualTo(0)
+        repeat(1) {
+            analyticsWorker.sendEvent("test_event", mapOf())
+        }
+        Thread.sleep(4000)
+        Truth.assertThat((syncer as TestSyncer).syncerCallCount).isEqualTo(0)
+        Thread.sleep(5000)
         Truth.assertThat((syncer as TestSyncer).syncerCallCount).isEqualTo(1)
     }
 }
