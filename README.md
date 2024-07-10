@@ -4,6 +4,7 @@
 1. use git clone to download project `git clone https://github.com/Rudderstack-Hiring/sdk-assignment-june-2024-amitseervi.git`
 2. checkout branch solution-v2 using `git checkout solution-v2`
 3. open project into android studio
+4. For sample local server checkout repository `git clone https://github.com/amitseervi/Simple-Analytics-Event-Listener.git`
 
 ## Configuration
 1. Once project opened in android studio sync the project.
@@ -44,5 +45,8 @@ Architecture design of library
 ![Library Architecture](analyticssdk/design/design.webp?raw=true "System Design")
 
 
-## Testing
-1. Testing in progress
+## Scripts
+1. Few test cases are present under androidTest source. to run instrumentation test connect android device and run command `./gradlew :analyticssdk:connectedAndroidTest`
+2. To update copyrights and liniting update run command `./gradlew spotlessApply`
+3. To update library version to latest stable library version run command `./gradlew versionCatalogUpdate`
+4. To publish library run command `./gradlew publish` (Publishing configuration is required)
