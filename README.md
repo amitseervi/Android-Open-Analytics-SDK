@@ -44,5 +44,8 @@ Architecture design of library
 ![Library Architecture](analyticssdk/design/design.webp?raw=true "System Design")
 
 
-## Testing
+## Scripts
 1. Few test cases are present under androidTest source. to run instrumentation test connect android device and run command `./gradlew :analyticssdk:connectedAndroidTest`
+2. To update copyrights and liniting update run command `./gradlew spotlessApply`
+3. To update library version to latest stable library version run command `./gradlew versionCatalogUpdate`
+4. To publish library run command `./gradlew publish` (Publishing configuration is required)
